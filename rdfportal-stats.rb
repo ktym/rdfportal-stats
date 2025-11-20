@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 #
 # % git clone https://github.com/rdfportal/rdfportal-config.git
+# % git clone https://github.com/ktym/rdfportal-stats.git
+# % cd rdfportal-stats
 # % ruby -d rdfportal-stats.rb > rdfportal-stats.txt 2> rdfportal-stats.err
 # Error: biosampleplus is not registered in endpoints
 # Error: pbo is not registered in endpoints
@@ -12,6 +14,8 @@ require "uri"
 require "cgi"
 require "json"  # gem install json
 require 'yaml'
+
+$prefix = ENV["RDFPORTAL_CONFIG_PREFIX"] || "../"
 
 class SPARQL
   def initialize(url)
@@ -25,8 +29,6 @@ class SPARQL
 
     @user = uri.user
     @pass = uri.password
-
-    @prefix_hash = {}
 
     Net::HTTP.version_1_2
   end
@@ -57,7 +59,7 @@ COUNT_SPARQL = "SELECT (count(*) as ?count) WHERE { GRAPH <@@> { ?s ?p ?o . } }"
 
 datasets = {}
 
-Dir.glob("rdfportal-config/endpoints/*.yml").each do |file|
+Dir.glob("#{$prefix}/rdfportal-config/endpoints/*.yml").each do |file|
   yaml = YAML.load(File.read(file))
   endpoint = File.basename(file, File.extname(file))
   yaml["load"]["datasets"].each do |hash|
@@ -66,7 +68,7 @@ Dir.glob("rdfportal-config/endpoints/*.yml").each do |file|
   end
 end
 
-Dir.glob("rdfportal-config/datasets/*/graph.tsv").each do |file|
+Dir.glob("#{$prefix}/rdfportal-config/datasets/*/graph.tsv").each do |file|
   dataset = File.basename(File.dirname(file))
   graphs = []
   File.open(file).each do |line|
